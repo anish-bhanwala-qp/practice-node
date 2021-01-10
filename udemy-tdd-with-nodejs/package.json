@@ -1,0 +1,57 @@
+{
+  "name": "express-ws",
+  "version": "1.0.0",
+  "description": "TDD with express",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development nodemon src/index",
+    "test": "cross-env NODE_ENV=test jest --watch",
+    "lint": "eslint ."
+  },
+  "author": "Anish Bhanwala",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "config": "^3.3.3",
+    "cross-env": "^7.0.3",
+    "express": "^4.17.1",
+    "express-validator": "^6.9.2",
+    "i18next": "^19.8.4",
+    "i18next-fs-backend": "^1.0.7",
+    "i18next-http-middleware": "^3.0.6",
+    "sequelize": "^6.3.5",
+    "sqlite3": "^5.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.17.0",
+    "eslint-config-prettier": "^7.1.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "jest": "^26.6.3",
+    "nodemon": "^2.0.6",
+    "prettier": "^2.2.1",
+    "supertest": "^6.0.1"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 2018
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:prettier/recommended"
+    ],
+    "plugins": [
+      "prettier"
+    ],
+    "env": {
+      "node": true,
+      "es6": true,
+      "jest": true
+    },
+    "rules": {
+      "eqeqeq": "warn"
+    }
+  },
+  "prettier": {
+    "singleQuote": true
+  }
+}
