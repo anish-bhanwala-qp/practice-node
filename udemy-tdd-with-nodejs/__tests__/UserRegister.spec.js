@@ -146,6 +146,31 @@ describe('User Registration', () => {
     expect(body.validationErrors.email).not.toBeUndefined();
     expect(body.validationErrors.username).not.toBeUndefined();
   });
+
+  it('creaates user in inactive mode', async () => {
+    await postUser();
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+
+  it('creaates user in inactive mode even if the request body contains inactive false', async () => {
+    const user = { ...validUser };
+    user.inactive = false;
+    await postUser(user);
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+
+  it('creates an activationToken for user', async () => {
+    const user = { ...validUser };
+    user.inactive = false;
+    await postUser(user);
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.activationToken).toBeTruthy();
+  });
 });
 
 describe('Internationalization', () => {
