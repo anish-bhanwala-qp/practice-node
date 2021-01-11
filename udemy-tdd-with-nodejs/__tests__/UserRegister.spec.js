@@ -2,13 +2,46 @@ const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
+const SmtpServer = require('smtp-server').SMTPServer;
 
-beforeAll(() => {
-  return sequelize.sync();
+let lastMail;
+let server;
+let simulateSmtpFailure = false;
+
+beforeAll(async () => {
+  server = new SmtpServer({
+    authOptional: true,
+    onData(stream, session, callback) {
+      let mailBody = '';
+      stream.on('data', (data) => {
+        mailBody += data.toString();
+      });
+
+      stream.on('end', () => {
+        if (simulateSmtpFailure) {
+          const err = new Error('Invalid mailbox');
+          err.responseCode = 553;
+          return callback(err);
+        }
+
+        lastMail = mailBody;
+        callback();
+      });
+    },
+  });
+
+  server.listen(8587, 'localhost');
+
+  await sequelize.sync();
 });
 
 beforeEach(() => {
+  simulateSmtpFailure = false;
   return User.destroy({ truncate: true });
+});
+
+afterAll(async () => {
+  await server.close();
 });
 
 const validUser = {
@@ -171,6 +204,38 @@ describe('User Registration', () => {
     const savedUser = users[0];
     expect(savedUser.activationToken).toBeTruthy();
   });
+
+  it('sends an account activation email with activationToken', async () => {
+    await postUser();
+
+    const users = await User.findAll();
+    const savedUser = users[0];
+
+    expect(lastMail).toContain('user1@email.com');
+    expect(lastMail).toContain(savedUser.activationToken);
+  });
+
+  it('returns 502 Bad Gateway when sending email fails', async () => {
+    simulateSmtpFailure = true;
+
+    const response = await postUser();
+    expect(response.status).toBe(502);
+  });
+
+  it('returns Email failure message when sending email fails', async () => {
+    simulateSmtpFailure = true;
+
+    const response = await postUser();
+    expect(response.body.message).toBe('Email failure');
+  });
+
+  it('does not save user to database when sending email fails', async () => {
+    simulateSmtpFailure = true;
+
+    await postUser();
+    const users = await User.findAll();
+    expect(users.length).toBe(0);
+  });
 });
 
 describe('Internationalization', () => {
@@ -209,8 +274,13 @@ describe('Internationalization', () => {
     }
   );
 
-  const email_in_use = 'ईमेल पहले से उपयोग में है';
+  const user_created = 'उपयोगकर्ता बनाया गया';
+  it(`returns "${user_created}" when signup request is valid`, async () => {
+    const response = await postUser({ ...validUser }, { language: 'hi' });
+    expect(response.body.message).toBe(user_created);
+  });
 
+  const email_in_use = 'ईमेल पहले से उपयोग में है';
   it(`returns "${email_in_use}" when same email is already in use when language is HINDI`, async () => {
     await User.create({ ...validUser });
     const response = await postUser({ ...validUser }, { language: 'hi' });
@@ -219,9 +289,92 @@ describe('Internationalization', () => {
     expect(body.validationErrors.email).toBe(email_in_use);
   });
 
-  const user_created = 'उपयोगकर्ता बनाया गया';
-  it('returns success message when signup request is valid', async () => {
+  const email_failure = 'ईमेल की विफलता';
+  it(`returns "${email_failure}" message when sending email fails`, async () => {
+    simulateSmtpFailure = true;
+
     const response = await postUser({ ...validUser }, { language: 'hi' });
-    expect(response.body.message).toBe(user_created);
+    expect(response.body.message).toBe(email_failure);
   });
+});
+
+describe('Account Activation', () => {
+  it('activates the account when correct token is sent', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+
+    users = await User.findAll();
+    const user = users[0];
+    expect(user.inactive).toBe(false);
+  });
+
+  it('removes the token from user table after successful activation', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+
+    users = await User.findAll();
+    const user = users[0];
+    expect(user.activationToken).toBeFalsy();
+  });
+
+  it('does not activate account when token is wrong', async () => {
+    await postUser();
+    const token = 'invalid-token-value';
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+
+    const users = await User.findAll();
+    const user = users[0];
+    expect(user.inactive).toBe(true);
+  });
+
+  it('returns bad request when token is wrong', async () => {
+    await postUser();
+    const token = 'invalid-token-value';
+
+    const response = await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+
+    expect(response.status).toBe(400);
+  });
+
+  it.each`
+    language | tokenStatus  | message
+    ${'hi'}  | ${'wrong'}   | ${'यह खाता या तो सक्रिय है या टोकन अमान्य है'}
+    ${'hi'}  | ${'correct'} | ${'यह खाता सक्रिय है'}
+    ${'en'}  | ${'wrong'}   | ${'This account is either active or the token is invalid'}
+    ${'en'}  | ${'correct'} | ${'Account activated'}
+  `(
+    'returns $message when wrong token is sent and langauge is $language',
+    async ({ language, message, tokenStatus }) => {
+      let token;
+      if (tokenStatus === 'wrong') {
+        token = 'invalid-token-value';
+      } else {
+        await postUser();
+        const users = await User.findAll();
+        token = users[0].activationToken;
+      }
+
+      const response = await request(app)
+        .post('/api/1.0/users/token/' + token)
+        .set('accept-language', language)
+        .send();
+
+      expect(response.body.message).toBe(message);
+    }
+  );
 });

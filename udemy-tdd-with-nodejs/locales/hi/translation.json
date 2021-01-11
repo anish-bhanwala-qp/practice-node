@@ -6,5 +6,8 @@
   "password_null": "पासवर्ड शून्य नहीं हो सकता",
   "password_size": "पासवर्ड कम से कम 6 अंकों का होना चाहिए",
   "email_in_use": "ईमेल पहले से उपयोग में है",
-  "user_created": "उपयोगकर्ता बनाया गया"
+  "user_created": "उपयोगकर्ता बनाया गया",
+  "email_failure": "ईमेल की विफलता",
+  "account_activation_failure": "यह खाता या तो सक्रिय है या टोकन अमान्य है",
+  "account_activation_success": "यह खाता सक्रिय है"
 }

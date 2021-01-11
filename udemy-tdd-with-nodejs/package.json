@@ -19,6 +19,7 @@
     "i18next": "^19.8.4",
     "i18next-fs-backend": "^1.0.7",
     "i18next-http-middleware": "^3.0.6",
+    "nodemailer": "^6.4.17",
     "sequelize": "^6.3.5",
     "sqlite3": "^5.0.0"
   },
@@ -27,8 +28,10 @@
     "eslint-config-prettier": "^7.1.0",
     "eslint-plugin-prettier": "^3.3.1",
     "jest": "^26.6.3",
+    "jest-watch-typeahead": "^0.6.1",
     "nodemon": "^2.0.6",
     "prettier": "^2.2.1",
+    "smtp-server": "^3.8.0",
     "supertest": "^6.0.1"
   },
   "eslintConfig": {
@@ -53,5 +56,11 @@
   },
   "prettier": {
     "singleQuote": true
+  },
+  "jest": {
+    "watchPlugins": [
+      "jest-watch-typeahead/filename",
+      "jest-watch-typeahead/testname"
+    ]
   }
 }
