@@ -236,6 +236,13 @@ describe('User Registration', () => {
     const users = await User.findAll();
     expect(users.length).toBe(0);
   });
+
+  it('returns "Validation Failure" message in error response body when validation fails', async () => {
+    const response = await postUser({ ...validUser, email: 'invalid@email' });
+
+    const body = response.body;
+    expect(body.message).toBe('Validation Failure');
+  });
 });
 
 describe('Internationalization', () => {
@@ -377,4 +384,57 @@ describe('Account Activation', () => {
       expect(response.body.message).toBe(message);
     }
   );
+
+  describe('Error Model', () => {
+    it('returns path, timestamp, message and validationErrors in response when validation fails', async () => {
+      const response = await postUser({ ...validUser, username: null });
+      const body = response.body;
+      expect(Object.keys(body)).toEqual([
+        'path',
+        'timestamp',
+        'message',
+        'validationErrors',
+      ]);
+    });
+
+    it('returns path, timestamp, message in response when request fails other than validation error', async () => {
+      await postUser();
+      const token = 'invalid-token-value';
+
+      const response = await request(app)
+        .post('/api/1.0/users/token/' + token)
+        .send();
+
+      expect(Object.keys(response.body)).toEqual([
+        'path',
+        'timestamp',
+        'message',
+      ]);
+    });
+
+    it('returns path in error body', async () => {
+      await postUser();
+      const token = 'invalid-token-value';
+
+      const response = await request(app)
+        .post('/api/1.0/users/token/' + token)
+        .send();
+
+      expect(response.body.path).toEqual('/api/1.0/users/token/' + token);
+    });
+
+    it('returns timestamp in milliseconds within 5 seconds value in error body', async () => {
+      const nowInMillis = new Date().getTime();
+      const fiveSecondsLater = nowInMillis + 5 * 1000;
+
+      await postUser();
+      const token = 'invalid-token-value';
+
+      const response = await request(app)
+        .post('/api/1.0/users/token/' + token)
+        .send();
+
+      expect(response.body.timestamp).toBeLessThan(fiveSecondsLater);
+    });
+  });
 });

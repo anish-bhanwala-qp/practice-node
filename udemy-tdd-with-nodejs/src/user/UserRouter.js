@@ -1,7 +1,11 @@
 const express = require('express');
 const userService = require('./UserService');
-const router = express.Router();
 const { check, validationResult } = require('express-validator');
+const InvalidTokenException = require('./InvalidTokenException');
+const ValidationException = require('../errors/ValidationException');
+const pagination = require('../middlewares/pagination');
+
+const router = express.Router();
 
 router.post(
   '/api/1.0/users',
@@ -30,33 +34,38 @@ router.post(
     .bail()
     .isLength({ min: 6 })
     .withMessage('password_size'),
-  async (req, res) => {
+  async (req, res, next) => {
     const errorResult = validationResult(req);
     if (!errorResult.isEmpty()) {
-      const validationErrors = {};
-      errorResult.errors.forEach((error) => {
-        validationErrors[error.param] = req.t(error.msg);
-      });
-      return res.status(400).send({ validationErrors: validationErrors });
+      return next(new ValidationException(errorResult.errors));
     }
 
     try {
       await userService.save(req.body);
       return res.send({ message: req.t('user_created') });
     } catch (err) {
-      return res.status(502).send({ message: req.t(err.message) });
+      next(err);
     }
   }
 );
 
-router.post('/api/1.0/users/token/:token', async (req, res) => {
+router.post('/api/1.0/users/token/:token', async (req, res, next) => {
   const token = req.params.token;
   try {
     await userService.activate(token);
     return res.send({ message: req.t('account_activation_success') });
   } catch (err) {
-    return res.status(400).send({ message: req.t(err.message) });
+    next(new InvalidTokenException());
   }
+});
+
+router.get('/api/1.0/users', pagination, async (req, res) => {
+  const pagination = req.pagination;
+  const users = await userService.getUsers(
+    pagination.page,
+    pagination.pageSize
+  );
+  return res.send(users);
 });
 
 module.exports = router;

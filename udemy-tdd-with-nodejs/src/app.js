@@ -3,6 +3,7 @@ const userRouter = require('./user/UserRouter');
 const i18next = require('i18next');
 const i18nextBackend = require('i18next-fs-backend');
 const i18nextMiddleware = require('i18next-http-middleware');
+const ErrorHandler = require('./errors/ErrorHandler');
 
 i18next
   .use(i18nextBackend)
@@ -27,6 +28,8 @@ app.use(i18nextMiddleware.handle(i18next));
 app.use(express.json());
 
 app.use(userRouter);
+
+app.use(ErrorHandler);
 
 console.log('env :' + process.env.NODE_ENV);
 
