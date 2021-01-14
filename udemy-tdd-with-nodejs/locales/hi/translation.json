@@ -9,5 +9,6 @@
   "user_created": "उपयोगकर्ता बनाया गया",
   "email_failure": "ईमेल की विफलता",
   "account_activation_failure": "यह खाता या तो सक्रिय है या टोकन अमान्य है",
-  "account_activation_success": "यह खाता सक्रिय है"
+  "account_activation_success": "यह खाता सक्रिय है",
+  "user_not_found": "उपयोगकर्ता नहीं मिला"
 }

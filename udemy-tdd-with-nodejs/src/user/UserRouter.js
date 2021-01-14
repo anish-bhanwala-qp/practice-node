@@ -4,6 +4,7 @@ const { check, validationResult } = require('express-validator');
 const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../errors/ValidationException');
 const pagination = require('../middlewares/pagination');
+const UserNotFoundException = require('./UserNotFoundException');
 
 const router = express.Router();
 
@@ -66,6 +67,15 @@ router.get('/api/1.0/users', pagination, async (req, res) => {
     pagination.pageSize
   );
   return res.send(users);
+});
+
+router.get('/api/1.0/users/:userId', async (req, res, next) => {
+  try {
+    const user = await userService.getUser(req.params.userId);
+    return res.send(user);
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = router;

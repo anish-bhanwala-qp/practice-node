@@ -35,9 +35,9 @@ beforeAll(async () => {
   await sequelize.sync();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   simulateSmtpFailure = false;
-  return User.destroy({ truncate: true });
+  return await User.destroy({ truncate: true });
 });
 
 afterAll(async () => {

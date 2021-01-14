@@ -7,8 +7,8 @@ beforeAll(async () => {
   await sequelize.sync();
 });
 
-beforeEach(() => {
-  return User.destroy({ truncate: true });
+beforeEach(async () => {
+  return await User.destroy({ truncate: true });
 });
 
 const getUsers = () => {
@@ -111,5 +111,67 @@ describe('Listing for users', () => {
 
     expect(response.body.content.length).toBe(10);
     expect(response.body.size).toBe(10);
+  });
+});
+
+describe('Get user', () => {
+  const getUser = (id = 5) => {
+    return request(app).get(`/api/1.0/users/${id}`).send();
+  };
+
+  it('returns 404 when user not found', async () => {
+    const response = await request(app).get('/api/1.0/users/5').send();
+    expect(response.status).toBe(404);
+  });
+
+  it.each`
+    language | message
+    ${'en'}  | ${'User not found'}
+    ${'hi'}  | ${'उपयोगकर्ता नहीं मिला'}
+  `(
+    'returns $message for unknown user when language is set to $language',
+    async ({ language, message }) => {
+      const response = await getUser().set('accept-language', language);
+      expect(response.body.message).toBe(message);
+    }
+  );
+
+  it('returns proper error bopdy when user not found', async () => {
+    const nowInMillis = new Date().getTime();
+    const response = await getUser();
+    const error = response.body;
+    expect(error.path).toBe('/api/1.0/users/5');
+    expect(error.timestamp).toBeGreaterThan(nowInMillis);
+    expect(Object.keys(error)).toEqual(['path', 'timestamp', 'message']);
+  });
+
+  it('returns 200 when user exists in database', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@email.com',
+      inactive: false,
+    });
+    const response = await getUser(user.id);
+    expect(response.status).toBe(200);
+  });
+
+  it('returns id, username, and email when user exists in database', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@email.com',
+      inactive: false,
+    });
+    const response = await getUser(user.id);
+    expect(Object.keys(response.body)).toEqual(['id', 'username', 'email']);
+  });
+
+  it('returns 404 when user is inactive in database', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@email.com',
+      inactive: true,
+    });
+    const response = await getUser(user.id);
+    expect(response.status).toBe(404);
   });
 });
