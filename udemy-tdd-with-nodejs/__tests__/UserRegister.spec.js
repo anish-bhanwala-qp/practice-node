@@ -3,6 +3,8 @@ const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
 const SmtpServer = require('smtp-server').SMTPServer;
+const en = require('../locales/en/translation.json');
+const hi = require('../locales/hi/translation.json');
 
 let lastMail;
 let server;
@@ -123,25 +125,17 @@ describe('User Registration', () => {
     expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
   });
 
-  const username_null = 'Username cannot be null';
-  const username_size =
-    'Username character length must be between 4 to 32 characters';
-  const email_null = 'Email cannot be null';
-  const email_valid = 'Email is not valid';
-  const password_null = 'Password cannot be null';
-  const password_size = 'Password must be at least 6 characters';
-
   it.each`
     field         | value               | errorMessage
-    ${'username'} | ${null}             | ${username_null}
-    ${'username'} | ${'use'}            | ${username_size}
-    ${'username'} | ${'u'.repeat(33)}   | ${username_size}
-    ${'email'}    | ${null}             | ${email_null}
-    ${'email'}    | ${'invaldEmail'}    | ${email_valid}
-    ${'email'}    | ${'user.email.com'} | ${email_valid}
-    ${'email'}    | ${'user@email'}     | ${email_valid}
-    ${'password'} | ${null}             | ${password_null}
-    ${'password'} | ${'12345'}          | ${password_size}
+    ${'username'} | ${null}             | ${en.username_null}
+    ${'username'} | ${'use'}            | ${en.username_size}
+    ${'username'} | ${'u'.repeat(33)}   | ${en.username_size}
+    ${'email'}    | ${null}             | ${en.email_null}
+    ${'email'}    | ${'invaldEmail'}    | ${en.email_valid}
+    ${'email'}    | ${'user.email.com'} | ${en.email_valid}
+    ${'email'}    | ${'user@email'}     | ${en.email_valid}
+    ${'password'} | ${null}             | ${en.password_null}
+    ${'password'} | ${'12345'}          | ${en.password_size}
   `(
     'returns "$errorMessage" when $field is $value',
     async ({ field, value, errorMessage }) => {
@@ -246,25 +240,17 @@ describe('User Registration', () => {
 });
 
 describe('Internationalization', () => {
-  const username_null = 'उपयोगकर्ता नाम शून्य नहीं हो सकता';
-  const username_size =
-    'उपयोगकर्ता नाम वर्ण की लंबाई 4 से 32 वर्णों के बीच होनी चाहिए';
-  const email_null = 'ईमेल शून्य नहीं हो सकता';
-  const email_valid = 'ईमेल शून्य नहीं हो सकता';
-  const password_null = 'पासवर्ड शून्य नहीं हो सकता';
-  const password_size = 'पासवर्ड कम से कम 6 अंकों का होना चाहिए';
-
   it.each`
     field         | value               | errorMessage
-    ${'username'} | ${null}             | ${username_null}
-    ${'username'} | ${'use'}            | ${username_size}
-    ${'username'} | ${'u'.repeat(33)}   | ${username_size}
-    ${'email'}    | ${null}             | ${email_null}
-    ${'email'}    | ${'invaldEmail'}    | ${email_valid}
-    ${'email'}    | ${'user.email.com'} | ${email_valid}
-    ${'email'}    | ${'user@email'}     | ${email_valid}
-    ${'password'} | ${null}             | ${password_null}
-    ${'password'} | ${'12345'}          | ${password_size}
+    ${'username'} | ${null}             | ${hi.username_null}
+    ${'username'} | ${'use'}            | ${hi.username_size}
+    ${'username'} | ${'u'.repeat(33)}   | ${hi.username_size}
+    ${'email'}    | ${null}             | ${hi.email_null}
+    ${'email'}    | ${'invaldEmail'}    | ${hi.email_valid}
+    ${'email'}    | ${'user.email.com'} | ${hi.email_valid}
+    ${'email'}    | ${'user@email'}     | ${hi.email_valid}
+    ${'password'} | ${null}             | ${hi.password_null}
+    ${'password'} | ${'12345'}          | ${hi.password_size}
   `(
     'returns "$errorMessage" when $field is $value when language is HINDI',
     async ({ field, value, errorMessage }) => {
@@ -360,10 +346,10 @@ describe('Account Activation', () => {
 
   it.each`
     language | tokenStatus  | message
-    ${'hi'}  | ${'wrong'}   | ${'यह खाता या तो सक्रिय है या टोकन अमान्य है'}
-    ${'hi'}  | ${'correct'} | ${'यह खाता सक्रिय है'}
-    ${'en'}  | ${'wrong'}   | ${'This account is either active or the token is invalid'}
-    ${'en'}  | ${'correct'} | ${'Account activated'}
+    ${'hi'}  | ${'wrong'}   | ${hi.account_activation_failure}
+    ${'hi'}  | ${'correct'} | ${hi.account_activation_success}
+    ${'en'}  | ${'wrong'}   | ${en.account_activation_failure}
+    ${'en'}  | ${'correct'} | ${en.account_activation_success}
   `(
     'returns $message when wrong token is sent and langauge is $language',
     async ({ language, message, tokenStatus }) => {
