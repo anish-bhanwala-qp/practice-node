@@ -4,7 +4,8 @@ const { check, validationResult } = require('express-validator');
 const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../errors/ValidationException');
 const pagination = require('../middlewares/pagination');
-const UserNotFoundException = require('./UserNotFoundException');
+const ForbiddenException = require('../errors/ForbiddenException');
+const basicAuthentication = require('../middlewares/basicAuthentication');
 
 const router = express.Router();
 
@@ -77,5 +78,20 @@ router.get('/api/1.0/users/:userId', async (req, res, next) => {
     next(err);
   }
 });
+
+router.put(
+  '/api/1.0/users/:userId',
+  basicAuthentication,
+  async (req, res, next) => {
+    const authenticatedUser = req.authenticatedUser;
+    if (!authenticatedUser || authenticatedUser.id != req.params.userId) {
+      return next(new ForbiddenException('unauthorized_user_update'));
+    }
+
+    await userService.updateUser(req.params.userId, req.body);
+
+    return res.send();
+  }
+);
 
 module.exports = router;

@@ -12,5 +12,6 @@
   "account_activation_success": "यह खाता सक्रिय है",
   "user_not_found": "उपयोगकर्ता नहीं मिला",
   "authentication_failure": "गलत परिचय",
-  "inactive_authentication_failure": "खाता निष्क्रिय है"
+  "inactive_authentication_failure": "खाता निष्क्रिय है",
+  "unauthorized_user_update": "आप उपयोगकर्ता को अपडेट करने के लिए अधिकृत नहीं हैं"
 }
