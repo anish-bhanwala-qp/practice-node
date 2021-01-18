@@ -20,7 +20,23 @@ const getUsers = (options = {}) => {
     const { email, password } = options.auth;
     agent.auth(email, password);
   }
+  if (options.token) {
+    agent.set('Authorization', `Bearer ${options.token}`);
+  }
+
   return agent.send();
+};
+
+const auth = async (options = {}) => {
+  let token;
+  if (options.auth) {
+    const response = await request(app)
+      .post(`/api/1.0/auth`)
+      .send(options.auth);
+    token = response.body.token;
+  }
+
+  return token;
 };
 
 const addUsers = async (activeUserCount, inactiveUserCount = 0) => {
@@ -123,11 +139,15 @@ describe('Listing for users', () => {
     expect(response.body.size).toBe(10);
   });
 
-  it('returns user list withou logged in user when request has valid authorization header', async () => {
+  it('returns user list without logged in user when request has valid authorization header', async () => {
     await addUsers(11);
-    const response = await getUsers({
+    const token = await auth({
       auth: { email: 'user1@email.com', password: 'P4ssword' },
-    }).query({ pageSize: 'size', page: 'page' });
+    });
+    const response = await getUsers({ token }).query({
+      pageSize: 'size',
+      page: 'page',
+    });
 
     expect(response.body.totalPages).toBe(1);
   });

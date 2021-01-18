@@ -5,6 +5,7 @@ const AuthenticationException = require('./AuthenticationException');
 const ForbiddenException = require('../errors/ForbiddenException');
 const { check, validationResult } = require('express-validator');
 const authRouter = express.Router();
+const { createToken } = require('./TokenService');
 
 authRouter.post(
   '/api/1.0/auth',
@@ -31,7 +32,8 @@ authRouter.post(
       return next(new AuthenticationException());
     }
 
-    res.send({ id: user.id, username: user.username });
+    const token = createToken(user);
+    res.send({ id: user.id, username: user.username, token });
   }
 );
 

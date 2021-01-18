@@ -5,6 +5,7 @@ const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../errors/ValidationException');
 const pagination = require('../middlewares/pagination');
 const ForbiddenException = require('../errors/ForbiddenException');
+const tokenAuthentication = require('../middlewares/tokenAuthentication');
 const basicAuthentication = require('../middlewares/basicAuthentication');
 
 const router = express.Router();
@@ -64,7 +65,7 @@ router.post('/api/1.0/users/token/:token', async (req, res, next) => {
 router.get(
   '/api/1.0/users',
   pagination,
-  basicAuthentication,
+  tokenAuthentication,
   async (req, res) => {
     const authenticatedUser = req.authenticatedUser;
     const pagination = req.pagination;
@@ -88,7 +89,7 @@ router.get('/api/1.0/users/:userId', async (req, res, next) => {
 
 router.put(
   '/api/1.0/users/:userId',
-  basicAuthentication,
+  tokenAuthentication,
   async (req, res, next) => {
     const authenticatedUser = req.authenticatedUser;
     if (!authenticatedUser || authenticatedUser.id != req.params.userId) {
