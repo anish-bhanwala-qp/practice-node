@@ -5,7 +5,7 @@ const AuthenticationException = require('./AuthenticationException');
 const ForbiddenException = require('../errors/ForbiddenException');
 const { check, validationResult } = require('express-validator');
 const authRouter = express.Router();
-const { createToken } = require('./TokenService');
+const TokenService = require('./TokenService');
 
 authRouter.post(
   '/api/1.0/auth',
@@ -32,9 +32,18 @@ authRouter.post(
       return next(new AuthenticationException());
     }
 
-    const token = createToken(user);
+    const token = await TokenService.createToken(user);
     res.send({ id: user.id, username: user.username, token });
   }
 );
+
+authRouter.post('/api/1.0/logout', async (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (authorization) {
+    const token = authorization.substring(7);
+    await TokenService.deleteToken(token);
+  }
+  return res.send();
+});
 
 module.exports = authRouter;
