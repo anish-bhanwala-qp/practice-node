@@ -5,6 +5,7 @@ const i18nextBackend = require('i18next-fs-backend');
 const i18nextMiddleware = require('i18next-http-middleware');
 const ErrorHandler = require('./errors/ErrorHandler');
 const authRouter = require('./auth/AuthenticationRouter');
+const tokenAuthentication = require('./middlewares/tokenAuthentication');
 
 i18next
   .use(i18nextBackend)
@@ -28,6 +29,7 @@ app.use(i18nextMiddleware.handle(i18next));
 
 app.use(express.json());
 
+app.use(tokenAuthentication);
 app.use(userRouter);
 app.use(authRouter);
 

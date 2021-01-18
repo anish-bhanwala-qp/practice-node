@@ -6,8 +6,6 @@ const ValidationException = require('../errors/ValidationException');
 const pagination = require('../middlewares/pagination');
 const ForbiddenException = require('../errors/ForbiddenException');
 const tokenAuthentication = require('../middlewares/tokenAuthentication');
-const basicAuthentication = require('../middlewares/basicAuthentication');
-
 const router = express.Router();
 
 router.post(
@@ -62,21 +60,16 @@ router.post('/api/1.0/users/token/:token', async (req, res, next) => {
   }
 });
 
-router.get(
-  '/api/1.0/users',
-  pagination,
-  tokenAuthentication,
-  async (req, res) => {
-    const authenticatedUser = req.authenticatedUser;
-    const pagination = req.pagination;
-    const users = await userService.getUsers(
-      pagination.page,
-      pagination.pageSize,
-      authenticatedUser
-    );
-    return res.send(users);
-  }
-);
+router.get('/api/1.0/users', pagination, async (req, res) => {
+  const authenticatedUser = req.authenticatedUser;
+  const pagination = req.pagination;
+  const users = await userService.getUsers(
+    pagination.page,
+    pagination.pageSize,
+    authenticatedUser
+  );
+  return res.send(users);
+});
 
 router.get('/api/1.0/users/:userId', async (req, res, next) => {
   try {
@@ -87,34 +80,26 @@ router.get('/api/1.0/users/:userId', async (req, res, next) => {
   }
 });
 
-router.put(
-  '/api/1.0/users/:userId',
-  tokenAuthentication,
-  async (req, res, next) => {
-    const authenticatedUser = req.authenticatedUser;
-    if (!authenticatedUser || authenticatedUser.id != req.params.userId) {
-      return next(new ForbiddenException('unauthorized_user_update'));
-    }
-
-    await userService.updateUser(req.params.userId, req.body);
-
-    return res.send();
+router.put('/api/1.0/users/:userId', async (req, res, next) => {
+  const authenticatedUser = req.authenticatedUser;
+  if (!authenticatedUser || authenticatedUser.id != req.params.userId) {
+    return next(new ForbiddenException('unauthorized_user_update'));
   }
-);
 
-router.delete(
-  '/api/1.0/users/:userId',
-  tokenAuthentication,
-  async (req, res, next) => {
-    const authenticatedUser = req.authenticatedUser;
-    if (!authenticatedUser || authenticatedUser.id != req.params.userId) {
-      return next(new ForbiddenException('unauthorized_user_delete'));
-    }
+  await userService.updateUser(req.params.userId, req.body);
 
-    await userService.deleteUser(req.params.userId);
+  return res.send();
+});
 
-    return res.send();
+router.delete('/api/1.0/users/:userId', async (req, res, next) => {
+  const authenticatedUser = req.authenticatedUser;
+  if (!authenticatedUser || authenticatedUser.id != req.params.userId) {
+    return next(new ForbiddenException('unauthorized_user_delete'));
   }
-);
+
+  await userService.deleteUser(req.params.userId);
+
+  return res.send();
+});
 
 module.exports = router;

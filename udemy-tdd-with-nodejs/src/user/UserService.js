@@ -8,6 +8,7 @@ const sequelize = require('../config/database');
 const InvalidTokenException = require('./InvalidTokenException');
 const UserNotFoundException = require('./UserNotFoundException');
 const { randomString } = require('../shared/generator');
+const TokenService = require('../auth/TokenService');
 
 const save = async (body) => {
   const { username, password, email } = body;
