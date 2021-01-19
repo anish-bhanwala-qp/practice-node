@@ -80,16 +80,37 @@ router.get('/api/1.0/users/:userId', async (req, res, next) => {
   }
 });
 
-router.put('/api/1.0/users/:userId', async (req, res, next) => {
-  const authenticatedUser = req.authenticatedUser;
-  if (!authenticatedUser || authenticatedUser.id != req.params.userId) {
-    return next(new ForbiddenException('unauthorized_user_update'));
+router.put(
+  '/api/1.0/users/:userId',
+  check('image').custom((imageBase64String) => {
+    if (!imageBase64String) {
+      return true;
+    }
+    const buffer = Buffer.from(imageBase64String, 'base64');
+    if (buffer.length > 1024 * 1024 * 2) {
+      throw new Error();
+    }
+    return true;
+  }),
+  async (req, res, next) => {
+    const errorResult = validationResult(req);
+    if (!errorResult.isEmpty()) {
+      return next(new ValidationException(errorResult.errors));
+    }
+
+    const authenticatedUser = req.authenticatedUser;
+    if (!authenticatedUser || authenticatedUser.id != req.params.userId) {
+      return next(new ForbiddenException('unauthorized_user_update'));
+    }
+
+    const updatedUser = await userService.updateUser(
+      req.params.userId,
+      req.body
+    );
+
+    return res.send(updatedUser);
   }
-
-  const updatedUser = await userService.updateUser(req.params.userId, req.body);
-
-  return res.send(updatedUser);
-});
+);
 
 router.delete('/api/1.0/users/:userId', async (req, res, next) => {
   const authenticatedUser = req.authenticatedUser;

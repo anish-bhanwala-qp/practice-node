@@ -211,4 +211,74 @@ describe('User Update', () => {
     );
     expect(fs.existsSync(profileImagePath)).toBe(true);
   });
+
+  it('removes old image after user uploads new image', async () => {
+    const fileInBase64 = readFileAsBase64();
+    const user = await addUser();
+    const validUpdate = { username: 'user1-updated', image: fileInBase64 };
+
+    const response = await putUser(user.id, validUpdate, {
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+    const firstImage = response.body.image;
+
+    await putUser(user.id, validUpdate, {
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+
+    const profileImagePath = path.join('.', uploadDir, profileDir, firstImage);
+    expect(fs.existsSync(profileImagePath)).toBe(false);
+  });
+
+  it('returns 200 when image size is exactly 2mb', async () => {
+    const fileWithSize2Mb = 'a'.repeat(1024 * 1024 * 2);
+    const base64 = Buffer.from(fileWithSize2Mb).toString('base64');
+    const savedUser = await addUser();
+    const validUpdate = { username: 'user1-updated', image: base64 };
+    const response = await putUser(savedUser.id, validUpdate, {
+      auth: {
+        email: savedUser.email,
+        password: 'P4ssword',
+      },
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('returns 400 when image size exceeds 2mb', async () => {
+    const fileGreaterThan2Mb = 'a'.repeat(1024 * 1024 * 2) + 'aa';
+    const base64 = Buffer.from(fileGreaterThan2Mb).toString('base64');
+    const savedUser = await addUser();
+    const validUpdate = { username: 'user1-updated', image: base64 };
+    const response = await putUser(savedUser.id, validUpdate, {
+      auth: {
+        email: savedUser.email,
+        password: 'P4ssword',
+      },
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('keep the old image after user only updates username', async () => {
+    const fileInBase64 = readFileAsBase64();
+    const user = await addUser();
+    const validUpdate = { username: 'user1-updated', image: fileInBase64 };
+
+    const response = await putUser(user.id, validUpdate, {
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+    const firstImage = response.body.image;
+
+    await putUser(
+      user.id,
+      { username: 'user1-updated-twice' },
+      {
+        auth: { email: 'user1@mail.com', password: 'P4ssword' },
+      }
+    );
+
+    const profileImagePath = path.join('.', uploadDir, profileDir, firstImage);
+    expect(fs.existsSync(profileImagePath)).toBe(true);
+  });
 });
