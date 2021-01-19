@@ -1,6 +1,3 @@
-const request = require('supertest');
-const app = require('../src/app');
-const sequelize = require('../src/config/database');
 const FileService = require('../src/file/FileService');
 const fs = require('fs');
 const path = require('path');
