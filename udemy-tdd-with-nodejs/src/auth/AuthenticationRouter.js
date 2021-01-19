@@ -33,7 +33,12 @@ authRouter.post(
     }
 
     const token = await TokenService.createToken(user);
-    res.send({ id: user.id, username: user.username, token });
+    res.send({
+      id: user.id,
+      username: user.username,
+      token,
+      image: user.image,
+    });
   }
 );
 

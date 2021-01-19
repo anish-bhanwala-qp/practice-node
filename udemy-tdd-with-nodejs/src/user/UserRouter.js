@@ -5,7 +5,7 @@ const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../errors/ValidationException');
 const pagination = require('../middlewares/pagination');
 const ForbiddenException = require('../errors/ForbiddenException');
-const tokenAuthentication = require('../middlewares/tokenAuthentication');
+const User = require('./User');
 const router = express.Router();
 
 router.post(
@@ -86,9 +86,9 @@ router.put('/api/1.0/users/:userId', async (req, res, next) => {
     return next(new ForbiddenException('unauthorized_user_update'));
   }
 
-  await userService.updateUser(req.params.userId, req.body);
+  const updatedUser = await userService.updateUser(req.params.userId, req.body);
 
-  return res.send();
+  return res.send(updatedUser);
 });
 
 router.delete('/api/1.0/users/:userId', async (req, res, next) => {
@@ -101,5 +101,54 @@ router.delete('/api/1.0/users/:userId', async (req, res, next) => {
 
   return res.send();
 });
+
+router.post(
+  '/api/1.0/user/password',
+  check('email').notEmpty().withMessage('email_valid'),
+  async (req, res, next) => {
+    const errorResult = validationResult(req);
+    if (!errorResult.isEmpty()) {
+      return next(new ValidationException(errorResult.errors));
+    }
+
+    try {
+      await userService.passwordResetRequest(req.body.email);
+      return res.send({ message: req.t('password_reset_success') });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+const passwordResetTokenValidator = async (req, res, next) => {
+  const user = await userService.findByPasswordResetToken(
+    req.body.passwordResetToken || ''
+  );
+
+  if (!user) {
+    return next(new ForbiddenException('unauthorized_password_reset'));
+  }
+  next();
+};
+
+router.put(
+  '/api/1.0/user/password',
+  passwordResetTokenValidator,
+  check('password')
+    .notEmpty()
+    .withMessage('password_null')
+    .bail()
+    .isLength({ min: 6 })
+    .withMessage('password_size'),
+  async (req, res, next) => {
+    const errorResult = validationResult(req);
+    if (!errorResult.isEmpty()) {
+      return res.status(400).send();
+    }
+
+    await userService.updatePassword(req.body);
+    res.send();
+  }
+);
 
 module.exports = router;

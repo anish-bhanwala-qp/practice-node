@@ -14,5 +14,8 @@
   "authentication_failure": "गलत परिचय",
   "inactive_authentication_failure": "खाता निष्क्रिय है",
   "unauthorized_user_update": "आप उपयोगकर्ता को अपडेट करने के लिए अधिकृत नहीं हैं",
-  "unauthorized_user_delete": "आप उपयोगकर्ता को हटाने के लिए अधिकृत नहीं है"
+  "unauthorized_user_delete": "आप उपयोगकर्ता को हटाने के लिए अधिकृत नहीं है",
+  "email_not_in_use": "ईमाई नहीं मिली",
+  "password_reset_success": "Check your email for password reset link",
+  "unauthorized_password_reset": "You are not authorized to update your password. Please follow the password reset steps again"
 }

@@ -23,6 +23,12 @@ User.init(
     activationToken: {
       type: Sequelize.STRING,
     },
+    passwordResetToken: {
+      type: Sequelize.STRING,
+    },
+    image: {
+      type: Sequelize.STRING,
+    },
   },
   {
     sequelize,

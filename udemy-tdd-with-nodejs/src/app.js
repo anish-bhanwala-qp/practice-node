@@ -6,6 +6,7 @@ const i18nextMiddleware = require('i18next-http-middleware');
 const ErrorHandler = require('./errors/ErrorHandler');
 const authRouter = require('./auth/AuthenticationRouter');
 const tokenAuthentication = require('./middlewares/tokenAuthentication');
+const FileService = require('./file/FileService');
 
 i18next
   .use(i18nextBackend)
@@ -22,6 +23,8 @@ i18next
       lookupHeader: 'accept-language',
     },
   });
+
+FileService.createFolders();
 
 const app = express();
 

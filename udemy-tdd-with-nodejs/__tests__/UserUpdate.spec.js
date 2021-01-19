@@ -5,6 +5,11 @@ const User = require('../src/user/User');
 const bcrypt = require('bcrypt');
 const en = require('../locales/en/translation.json');
 const hi = require('../locales/hi/translation.json');
+const fs = require('fs');
+const path = require('path');
+const config = require('config');
+
+const { uploadDir, profileDir } = config;
 
 beforeAll(async () => {
   await sequelize.sync();
@@ -16,6 +21,14 @@ beforeEach(async () => {
       cascade: true,
     },
   });
+});
+
+afterAll(() => {
+  const profileDirectory = path.join('.', uploadDir, profileDir);
+  const files = fs.readdirSync(profileDirectory);
+  for (const file of files) {
+    fs.unlinkSync(path.join(profileDirectory, file));
+  }
 });
 
 const activeUser = {
@@ -54,6 +67,11 @@ const putUser = async (id = 5, body = null, options = {}) => {
   }
 
   return agent.send(body);
+};
+
+const readFileAsBase64 = () => {
+  const filePath = path.join('.', '__tests__', 'resources', 'test-image.jpg');
+  return fs.readFileSync(filePath, { encoding: 'base64' });
 };
 
 describe('User Update', () => {
@@ -152,5 +170,53 @@ describe('User Update', () => {
     });
 
     expect(response.status).toBe(403);
+  });
+
+  it('saves image in when update request contains image as base64', async () => {
+    const fileInBase64 = readFileAsBase64();
+    const user = await addUser();
+    const validUpdate = { username: 'user1-updated', image: fileInBase64 };
+
+    await putUser(user.id, validUpdate, {
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+
+    const updatedUserInDb = await User.findOne({ where: { id: user.id } });
+    expect(updatedUserInDb.image).toBeTruthy();
+  });
+
+  it('returns success body having only id, username, email and image', async () => {
+    const fileInBase64 = readFileAsBase64();
+    const user = await addUser();
+    const validUpdate = { username: 'user1-updated', image: fileInBase64 };
+
+    const response = await putUser(user.id, validUpdate, {
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+    expect(Object.keys(response.body)).toEqual([
+      'id',
+      'username',
+      'email',
+      'image',
+    ]);
+  });
+
+  it('saves image to upload folder and stores filename in user when update request contains image', async () => {
+    const fileInBase64 = readFileAsBase64();
+    const user = await addUser();
+    const validUpdate = { username: 'user1-updated', image: fileInBase64 };
+
+    await putUser(user.id, validUpdate, {
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+
+    const updatedUserInDb = await User.findOne({ where: { id: user.id } });
+    const profileImagePath = path.join(
+      '.',
+      uploadDir,
+      profileDir,
+      updatedUserInDb.image
+    );
+    expect(fs.existsSync(profileImagePath)).toBe(true);
   });
 });
