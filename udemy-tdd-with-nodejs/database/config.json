@@ -1,0 +1,18 @@
+{
+  "development": {
+    "username": "db-user",
+    "password": "db-pasword",
+    "database": "hoaxify",
+    "host": "127.0.0.1",
+    "dialect": "sqlite",
+    "storage": "./database.sqlite"
+  },
+  "staging": {
+    "username": "db-user",
+    "password": "db-pasword",
+    "database": "hoaxify",
+    "host": "127.0.0.1",
+    "dialect": "sqlite",
+    "storage": "./staging.sqlite"
+  }
+}

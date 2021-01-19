@@ -36,7 +36,9 @@ beforeAll(async () => {
 
   server.listen(config.mail.port, 'localhost');
 
-  await sequelize.sync();
+  if (process.env.NODE_ENV === 'test') {
+    await sequelize.sync();
+  }
 });
 
 beforeEach(async () => {

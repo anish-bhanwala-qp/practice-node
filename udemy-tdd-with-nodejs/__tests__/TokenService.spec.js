@@ -1,11 +1,11 @@
-const request = require('supertest');
-const app = require('../src/app');
 const sequelize = require('../src/config/database');
 const TokenService = require('../src/auth/TokenService');
 const Token = require('../src/auth/Token');
 
 beforeAll(async () => {
-  await sequelize.sync();
+  if (process.env.NODE_ENV === 'test') {
+    await sequelize.sync();
+  }
 });
 
 beforeEach(async () => {

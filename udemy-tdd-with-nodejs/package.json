@@ -7,7 +7,10 @@
     "start": "cross-env NODE_ENV=development nodemon src/index",
     "test": "cross-env NODE_ENV=test jest --watch",
     "posttest": "cross-env NODE_ENV=test node test-cleanup",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:staging": "cross-env NODE_ENV=staging jest -f . --all --maxWorkers=1",
+    "migrate:test": "cross-env NODE_ENV=staging sequelize-cli db:migrate",
+    "pretest:staging": "npm run migrate:test"
   },
   "author": "Anish Bhanwala",
   "license": "ISC",
@@ -23,6 +26,7 @@
     "i18next-http-middleware": "^3.0.6",
     "nodemailer": "^6.4.17",
     "sequelize": "^6.3.5",
+    "sequelize-cli": "^6.2.0",
     "sqlite3": "^5.0.0"
   },
   "devDependencies": {

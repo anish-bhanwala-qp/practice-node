@@ -12,7 +12,14 @@ const config = require('config');
 const { uploadDir, profileDir } = config;
 
 beforeAll(async () => {
-  await sequelize.sync();
+  if (process.env.NODE_ENV === 'test') {
+    await sequelize.sync();
+  }
+  await User.destroy({
+    truncate: {
+      cascade: true,
+    },
+  });
 });
 
 beforeEach(async () => {
