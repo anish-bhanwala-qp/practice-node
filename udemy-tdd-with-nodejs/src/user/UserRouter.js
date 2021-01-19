@@ -5,7 +5,7 @@ const InvalidTokenException = require('./InvalidTokenException');
 const ValidationException = require('../errors/ValidationException');
 const pagination = require('../middlewares/pagination');
 const ForbiddenException = require('../errors/ForbiddenException');
-const User = require('./User');
+const FileService = require('../file/FileService');
 const router = express.Router();
 
 router.post(
@@ -82,14 +82,19 @@ router.get('/api/1.0/users/:userId', async (req, res, next) => {
 
 router.put(
   '/api/1.0/users/:userId',
-  check('image').custom((imageBase64String) => {
+  check('image').custom(async (imageBase64String) => {
     if (!imageBase64String) {
       return true;
     }
     const buffer = Buffer.from(imageBase64String, 'base64');
-    if (buffer.length > 1024 * 1024 * 2) {
+    if (!FileService.isLessThan2Mb(buffer)) {
       throw new Error();
     }
+    const supportedType = await FileService.isSupportedFileType(buffer);
+    if (!supportedType) {
+      throw new Error();
+    }
+
     return true;
   }),
   async (req, res, next) => {

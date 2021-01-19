@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('config');
 const { randomString } = require('../shared/generator');
+const FileType = require('file-type');
 
 const uploadFolder = path.join('.', config.uploadDir);
 const profileFolder = path.join('.', config.uploadDir, config.profileDir);
@@ -34,5 +35,20 @@ const deleteProfileImage = async (filename) => {
   await fs.promises.unlink(filePath);
 };
 
-const FileService = { createFolders, saveProfileImage, deleteProfileImage };
+const isLessThan2Mb = (buffer) => {
+  return buffer.length <= 1024 * 1024 * 2;
+};
+
+const isSupportedFileType = async (buffer) => {
+  const type = await FileType.fromBuffer(buffer);
+  return type && (type.mime === 'image/jpeg' || type.mime === 'image/png');
+};
+
+const FileService = {
+  createFolders,
+  saveProfileImage,
+  deleteProfileImage,
+  isLessThan2Mb,
+  isSupportedFileType,
+};
 module.exports = FileService;

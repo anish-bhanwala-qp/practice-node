@@ -61,8 +61,8 @@ const putUser = async (id = 5, body = null, options = {}) => {
   return agent.send(body);
 };
 
-const readFileAsBase64 = () => {
-  const filePath = path.join('.', '__tests__', 'resources', 'test-image.jpg');
+const readFileAsBase64 = (file = 'test-image.jpg') => {
+  const filePath = path.join('.', '__tests__', 'resources', file);
   return fs.readFileSync(filePath, { encoding: 'base64' });
 };
 
@@ -231,10 +231,16 @@ describe('User Update', () => {
   });
 
   it('returns 200 when image size is exactly 2mb', async () => {
-    const fileWithSize2Mb = 'a'.repeat(1024 * 1024 * 2);
-    const base64 = Buffer.from(fileWithSize2Mb).toString('base64');
+    const testImage = await readFileAsBase64('test-image.jpg');
+    const testImageByte = Buffer.from(testImage, 'base64').length;
+    const twoMb = 1024 * 1024 * 2;
+    const filling = 'a'.repeat(twoMb - testImageByte);
+    const fillBase64 = Buffer.from(filling).toString('base64');
     const savedUser = await addUser();
-    const validUpdate = { username: 'user1-updated', image: base64 };
+    const validUpdate = {
+      username: 'user1-updated',
+      image: testImage + fillBase64,
+    };
     const response = await putUser(savedUser.id, validUpdate, {
       auth: {
         email: savedUser.email,
@@ -281,4 +287,25 @@ describe('User Update', () => {
     const profileImagePath = path.join('.', uploadDir, profileDir, firstImage);
     expect(fs.existsSync(profileImagePath)).toBe(true);
   });
+
+  it.each`
+    file              | status
+    ${'test-gif.gif'} | ${400}
+    ${'test-pdf.pdf'} | ${400}
+    ${'test-txt.txt'} | ${400}
+    ${'test-jpg.jpg'} | ${200}
+  `(
+    'return $status when uploading $file as image',
+    async ({ file, status }) => {
+      const fileInBase64 = readFileAsBase64(file);
+      const user = await addUser();
+      const updateBody = { username: 'user1-updated', image: fileInBase64 };
+
+      const response = await putUser(user.id, updateBody, {
+        auth: { email: 'user1@mail.com', password: 'P4ssword' },
+      });
+
+      expect(response.status).toBe(status);
+    }
+  );
 });
