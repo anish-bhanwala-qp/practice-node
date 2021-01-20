@@ -29,7 +29,8 @@
     "pg-hstore": "^2.3.3",
     "sequelize": "^6.3.5",
     "sequelize-cli": "^6.2.0",
-    "sqlite3": "^5.0.0"
+    "sqlite3": "^5.0.0",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
